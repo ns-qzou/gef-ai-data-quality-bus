@@ -1,0 +1,68 @@
+name: Proto Schema Review
+
+on:
+  pull_request:
+    paths:
+      - 'protos/**/*.proto'
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout ef-client
+        uses: actions/checkout@v4
+
+      - name: Checkout data-quality-bus
+        uses: actions/checkout@v4
+        with:
+          repository: your-org/gef-ai-data-quality-bus
+          path: dqbus
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install data-quality-bus
+        run: pip install ./dqbus
+
+      - name: Ingest current protos
+        run: python -m src.cli ingest --proto-dir protos/
+        working-directory: dqbus
+        env:
+          CHROMADB_PERSIST_DIR: /tmp/chromadb
+
+      - name: Get changed proto files
+        id: changed
+        run: |
+          FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }} HEAD -- 'protos/**/*.proto')
+          echo "files=$FILES" >> $GITHUB_OUTPUT
+
+      - name: Review changed protos
+        if: steps.changed.outputs.files != ''
+        run: |
+          REVIEW=""
+          for file in ${{ steps.changed.outputs.files }}; do
+            REVIEW="$REVIEW\n$(python -m src.cli review "$file" --format markdown)"
+          done
+          echo "$REVIEW" > /tmp/review.md
+        working-directory: dqbus
+        env:
+          CHROMADB_PERSIST_DIR: /tmp/chromadb
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
+      - name: Post review comment
+        if: steps.changed.outputs.files != ''
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const body = fs.readFileSync('/tmp/review.md', 'utf8');
+            if (body.trim()) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: '## Proto Schema Review\n\n' + body
+              });
+            }

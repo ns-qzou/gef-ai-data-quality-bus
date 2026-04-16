@@ -1,0 +1,10 @@
+data/chromadb/
+__pycache__/
+*.egg-info/
+.env
+*.pyc
+dist/
+build/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/

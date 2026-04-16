@@ -7,7 +7,7 @@ import chromadb
 
 from src.errors import DataAccessError
 from src.proto_parser.models import FieldRecord
-from src.rag.embeddings import get_embedding_function
+from src.vectorstore.embeddings import get_embedding_function
 
 logger = logging.getLogger(__name__)
 

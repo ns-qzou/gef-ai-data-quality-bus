@@ -6,7 +6,7 @@ from pathlib import Path
 
 from src.proto_parser.extractor import extract_all_fields
 from src.proto_parser.parser import parse_proto_directory
-from src.rag.store import SchemaStore
+from src.vectorstore.store import SchemaStore
 
 logger = logging.getLogger(__name__)
 

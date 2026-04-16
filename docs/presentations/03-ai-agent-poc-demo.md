@@ -1,3 +1,17 @@
+---
+marp: true
+theme: default
+paginate: true
+size: 16:9
+style: |
+  section { font-size: 22px; }
+  table { font-size: 18px; }
+  pre { font-size: 14px; }
+  h1 { color: #2563eb; }
+  h2 { color: #1e40af; }
+  h3 { color: #3b82f6; }
+---
+
 # GEF AI Data Quality Bus — AI Agent POC Presentation
 
 ---

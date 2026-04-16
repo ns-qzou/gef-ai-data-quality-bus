@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pytest
 
-from src.rag.ingest import ingest_protos
-from src.rag.store import SchemaStore
+from src.vectorstore.ingest import ingest_protos
+from src.vectorstore.store import SchemaStore
 
 
 @pytest.fixture

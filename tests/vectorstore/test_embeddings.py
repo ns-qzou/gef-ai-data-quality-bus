@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from src.rag.embeddings import get_embedding_function
+from src.vectorstore.embeddings import get_embedding_function
 
 
 class TestGetEmbeddingFunction:

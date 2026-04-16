@@ -1,3 +1,18 @@
+---
+marp: true
+theme: default
+paginate: true
+size: 16:9
+style: |
+  section { font-size: 20px; }
+  table { font-size: 16px; }
+  pre { font-size: 13px; }
+  h1 { color: #2563eb; }
+  h2 { color: #1e40af; }
+  h3 { color: #3b82f6; }
+  code { font-size: 13px; }
+---
+
 # GEF AI Data Quality Bus — Technical Deep Dive
 
 ---

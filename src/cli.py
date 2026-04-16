@@ -22,12 +22,14 @@ def cli():
 @click.option("--output", type=click.Path(path_type=Path), default=None,
               help="Output path for canonical registry YAML")
 @click.option("--model", default=None, help="Claude model to use")
-def build_registry(proto_dir: Path | None, output: Path | None, model: str | None):
+@click.option("--concurrency", default=5, help="Max parallel LLM requests")
+@click.option("--batch-size", default=100, help="Fields per LLM batch")
+def build_registry(proto_dir: Path | None, output: Path | None, model: str | None, concurrency: int, batch_size: int):
     """Parse ef-client protos and build canonical field registry via LLM."""
     from src.proto_parser.extractor import extract_all_fields
     from src.proto_parser.parser import parse_proto_directory
-    from src.rag.ingest import ingest_protos
-    from src.rag.store import SchemaStore
+    from src.vectorstore.ingest import ingest_protos
+    from src.vectorstore.store import SchemaStore
     from src.registry.builder import RegistryBuilder
     from src.registry.io import export_registry, sync_to_store
 
@@ -45,9 +47,10 @@ def build_registry(proto_dir: Path | None, output: Path | None, model: str | Non
         store = SchemaStore(persist_dir=get_chromadb_persist_dir())
         ingest_protos(proto_dir, store)
 
-    with console.status(f"Building canonical registry with {model}..."):
-        builder = RegistryBuilder(model=model)
-        registry = builder.build_registry(all_fields)
+    total_batches = (len(all_fields) + batch_size - 1) // batch_size
+    console.print(f"Building canonical registry with {model} ({total_batches} batches of {batch_size} fields, {concurrency} concurrent)...")
+    builder = RegistryBuilder(model=model, max_concurrency=concurrency)
+    registry = builder.build_registry(all_fields, batch_size=batch_size)
 
     export_registry(registry, output)
     sync_to_store(registry, store)
@@ -62,7 +65,7 @@ def build_registry(proto_dir: Path | None, output: Path | None, model: str | Non
 def review(proto_path: Path, output_format: str, model: str | None):
     """Review a proto file for cross-schema consistency."""
     from src.agents.graph import run_review
-    from src.rag.store import SchemaStore
+    from src.vectorstore.store import SchemaStore
     from src.registry.io import import_registry
 
     store = SchemaStore(persist_dir=get_chromadb_persist_dir())
@@ -76,7 +79,7 @@ def review(proto_path: Path, output_format: str, model: str | None):
         console.print("[yellow]Warning: No canonical registry found. Run 'build-registry' first.[/yellow]")
 
     use_llm = model is not None
-    result = run_review(store, registry, proto_path, use_llm_recommendations=use_llm)
+    result = run_review(store, registry, proto_path, use_llm_recommendations=use_llm, model=model)
 
     if output_format == "terminal":
         _print_terminal(result)
@@ -90,8 +93,8 @@ def review(proto_path: Path, output_format: str, model: str | None):
 @click.option("--proto-dir", type=click.Path(exists=True, path_type=Path), default=None)
 def ingest(proto_dir: Path | None):
     """Rebuild ChromaDB vector store from proto files (no LLM needed)."""
-    from src.rag.ingest import ingest_protos
-    from src.rag.store import SchemaStore
+    from src.vectorstore.ingest import ingest_protos
+    from src.vectorstore.store import SchemaStore
 
     proto_dir = proto_dir or get_ef_client_proto_dir()
     store = SchemaStore(persist_dir=get_chromadb_persist_dir())

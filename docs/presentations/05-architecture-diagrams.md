@@ -1,3 +1,16 @@
+---
+marp: true
+theme: default
+paginate: true
+size: 16:9
+style: |
+  section { font-size: 20px; }
+  pre { font-size: 12px; font-family: 'Courier New', monospace; }
+  h1 { color: #2563eb; }
+  h2 { color: #1e40af; }
+  h3 { color: #3b82f6; }
+---
+
 # GEF AI Data Quality Bus — Architecture Diagrams
 
 ---

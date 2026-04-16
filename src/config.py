@@ -18,15 +18,40 @@ def get_registry_dir() -> Path:
     return Path(os.environ.get("REGISTRY_DIR", "data/registry"))
 
 
+def is_bedrock() -> bool:
+    return os.environ.get("CLAUDE_CODE_USE_BEDROCK", "") == "1"
+
+
 def get_default_model() -> str:
+    if is_bedrock():
+        return os.environ.get("DEFAULT_MODEL", "us.anthropic.claude-sonnet-4-20250514-v1:0")
     return os.environ.get("DEFAULT_MODEL", "claude-sonnet-4-20250514")
 
 
-def get_anthropic_api_key() -> str:
-    key = os.environ.get("ANTHROPIC_API_KEY", "")
-    if not key:
-        raise ValidationError(
-            code="MISSING_API_KEY",
-            message="ANTHROPIC_API_KEY environment variable is required",
-        )
-    return key
+def get_llm(model: str | None = None, max_tokens: int = 4096):
+    """Get the appropriate LLM client based on environment.
+
+    Returns ChatBedrockConverse if CLAUDE_CODE_USE_BEDROCK=1, otherwise ChatAnthropic.
+    """
+    model = model or get_default_model()
+
+    if is_bedrock():
+        from langchain_aws import ChatBedrockConverse
+        kwargs = {
+            "model": model,
+            "max_tokens": max_tokens,
+            "region_name": os.environ.get("AWS_REGION", "us-east-1"),
+        }
+        # Opus 4+ models don't support temperature
+        if "opus" not in model.lower():
+            kwargs["temperature"] = 0
+        return ChatBedrockConverse(**kwargs)
+    else:
+        from langchain_anthropic import ChatAnthropic
+        kwargs = {
+            "model": model,
+            "max_tokens": max_tokens,
+        }
+        if "opus" not in model.lower():
+            kwargs["temperature"] = 0
+        return ChatAnthropic(**kwargs)

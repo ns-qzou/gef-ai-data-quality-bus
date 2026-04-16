@@ -3,7 +3,7 @@
 import logging
 
 from src.agents.state import ReviewState
-from src.rag.store import SchemaStore
+from src.vectorstore.store import SchemaStore
 
 logger = logging.getLogger(__name__)
 
@@ -22,8 +22,10 @@ def schema_agent(state: ReviewState, store: SchemaStore) -> dict:
     similar_fields: dict[str, list[dict]] = {}
 
     for field_rec in fields:
+        # Include message context in the query for better semantic matching
+        query_text = f"{field_rec.field_name} ({field_rec.field_type}) in {field_rec.message_name}"
         results = store.query_similar_fields(
-            field_name=field_rec.field_name,
+            field_name=query_text,
             field_type=field_rec.field_type,
             n_results=10,
         )

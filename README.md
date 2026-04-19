@@ -19,6 +19,41 @@ python -m src.cli build-registry
 
 # 3. Review a proto file
 python -m src.cli review ~/git/ef-client/protos/aidiscovery/mcp_session.proto
+
+
+
+# 1. Create and activate a virtual env
+python -m venv .venv
+source .venv/bin/activate
+
+# 2. Install dependencies
+pip install -r requirements.txt
+
+# 3. Set your API key (if using Claude API directly, not Bedrock)
+export ANTHROPIC_API_KEY=your-key-here
+# OR if using Bedrock:
+export CLAUDE_CODE_USE_BEDROCK=1
+
+# 4. Run the build
+  # 4.1 Ingest proto files into ChromaDB (no LLM needed, optional — only if you want ChromaDB without building regist)
+python -m src.cli ingest --proto-dir ~/git/ef-client/protos
+
+# 4.2 Build canonical field registry (uses Claude API and it combined with ingest + build + export in one command )
+# build-registry reads raw protos from raw file system like ef-client repo → extracts all fields → groups them → LLM merges → outputs YAML
+
+a. python -m src.cli build-registry #has default no need provide --proto-dir )
+
+b. python -m src.cli build-registry \
+  --proto-dir ~/git/ef-client/protos \
+  --output data/registry/canonical_fields.yaml  #if no default proto files location
+
+
+# 4.3 Review a proto file
+#review queries ChromaDB → "given this field, what similar fields exist?" → flags inconsistencies
+python -m src.cli review ~/git/ef-client/protos/aidiscovery/mcp_session.proto
+
+# 5. When done
+deactivate
 ```
 
 ## CLI Commands

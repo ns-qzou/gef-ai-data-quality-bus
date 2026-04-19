@@ -1,3 +1,16 @@
+---
+marp: true
+theme: default
+paginate: true
+size: 16:9
+style: |
+  section { font-size: 24px; }
+  table { font-size: 20px; }
+  pre { font-size: 18px; }
+  h1 { color: #2563eb; }
+  h2 { color: #1e40af; }
+---
+
 # GEF AI Data Quality Bus — Tight Narrative (3 Slides)
 
 ---

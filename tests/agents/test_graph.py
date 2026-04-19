@@ -7,7 +7,7 @@ import pytest
 
 from src.agents.graph import ReviewResult, build_review_graph, run_review
 from src.proto_parser.models import FieldRecord, ProtoFile, ProtoMessage, ProtoField
-from src.rag.store import SchemaStore
+from src.vectorstore.store import SchemaStore
 from src.registry.models import CanonicalConcept, CanonicalRegistry, FieldMapping
 
 
@@ -94,7 +94,7 @@ class TestRunReview:
         if not mcp_path.exists():
             pytest.skip("ef-client repo not available")
 
-        from src.rag.ingest import ingest_protos
+        from src.vectorstore.ingest import ingest_protos
         store = SchemaStore(persist_dir=tmp_path / "chromadb")
         ingest_protos(ef_client_dir, store)
 

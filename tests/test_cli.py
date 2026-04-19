@@ -72,17 +72,12 @@ class TestCLI:
 
 
 class TestConfig:
-    def test_missing_api_key_raises(self):
-        from src.errors import ValidationError
-        from src.config import get_anthropic_api_key
-        import os
-        old = os.environ.pop("ANTHROPIC_API_KEY", None)
-        try:
-            with pytest.raises(ValidationError):
-                get_anthropic_api_key()
-        finally:
-            if old:
-                os.environ["ANTHROPIC_API_KEY"] = old
+    def test_is_bedrock_detects_env(self, monkeypatch):
+        from src.config import is_bedrock
+        monkeypatch.setenv("CLAUDE_CODE_USE_BEDROCK", "1")
+        assert is_bedrock() is True
+        monkeypatch.delenv("CLAUDE_CODE_USE_BEDROCK")
+        assert is_bedrock() is False
 
     def test_default_proto_dir(self):
         from src.config import get_ef_client_proto_dir

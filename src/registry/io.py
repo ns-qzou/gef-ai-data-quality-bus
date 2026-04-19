@@ -141,13 +141,13 @@ def sync_to_store(registry: CanonicalRegistry, store) -> int:
     for concept in registry.concepts.values():
         records.append(
             FieldRecord(
-                field_name=concept.canonical_name,
+                field_name=concept.name,
                 field_type=concept.canonical_type,
                 message_name="CanonicalRegistry",
-                package="canonical",
-                file_path="canonical_registry",
+                package="canonical_registry",
+                file_path=f"canonical_registry/{concept.name}",
                 label="canonical",
-                comment=concept.description,
+                comment=f"{concept.description} (canonical: {concept.canonical_name})",
             )
         )
 

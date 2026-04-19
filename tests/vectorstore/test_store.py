@@ -3,7 +3,7 @@
 import pytest
 
 from src.proto_parser.models import FieldRecord
-from src.rag.store import SchemaStore
+from src.vectorstore.store import SchemaStore
 
 
 @pytest.fixture

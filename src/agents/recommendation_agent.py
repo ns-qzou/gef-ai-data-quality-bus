@@ -2,10 +2,10 @@
 
 import logging
 
-from langchain_anthropic import ChatAnthropic
 from langchain_core.messages import HumanMessage, SystemMessage
 
 from src.agents.state import Recommendation, ReviewState
+from src.config import get_llm
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +45,7 @@ def recommendation_agent(state: ReviewState, model: str = "claude-sonnet-4-20250
     proto_file = state.get("proto_file")
     context = f"Proto file: {proto_file.path}" if proto_file else "Unknown proto"
 
-    llm = ChatAnthropic(model=model, max_tokens=2048, temperature=0)
+    llm = get_llm(model=model, max_tokens=8192)
     messages = [
         SystemMessage(content=SYSTEM_PROMPT),
         HumanMessage(content=f"{context}\n\nIssues found:\n{issues_text}\n\nGenerate recommendations as JSON array."),
@@ -100,17 +100,35 @@ def recommendation_agent_simple(state: ReviewState) -> dict:
 def _parse_recommendations(content: str) -> list[Recommendation]:
     """Parse LLM JSON response into Recommendation objects."""
     import json
+    import re
 
     text = content.strip()
-    if text.startswith("```"):
-        text = text.split("\n", 1)[1]
-        text = text.rsplit("```", 1)[0]
+
+    # Try extracting JSON from markdown code blocks
+    if "```" in text:
+        match = re.search(r"```(?:json)?\s*\n(.*?)```", text, re.DOTALL)
+        if match:
+            text = match.group(1).strip()
+
+    # Try finding a JSON array anywhere in the text
+    if not text.startswith("["):
+        match = re.search(r"\[.*\]", text, re.DOTALL)
+        if match:
+            text = match.group(0)
 
     try:
         data = json.loads(text)
     except json.JSONDecodeError:
-        logger.warning("Failed to parse recommendation response as JSON")
-        return []
+        logger.warning("Failed to parse recommendation response as JSON, returning raw as single recommendation")
+        # Fall back: return the raw LLM output as a single recommendation
+        return [
+            Recommendation(
+                title="LLM Review Analysis",
+                body=content,
+                severity="info",
+                fields=[],
+            )
+        ]
 
     return [
         Recommendation(

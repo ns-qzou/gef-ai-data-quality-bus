@@ -14,10 +14,12 @@ def _extract_message_fields(
     records: list[FieldRecord] = []
 
     for field in message.fields:
+        # Include 'repeated' in type so downstream comparison is accurate
+        field_type = f"repeated {field.type}" if field.label == "repeated" else field.type
         records.append(
             FieldRecord(
                 field_name=field.name,
-                field_type=field.type,
+                field_type=field_type,
                 message_name=message.name,
                 package=package,
                 file_path=file_path,

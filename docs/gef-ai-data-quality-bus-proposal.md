@@ -326,3 +326,6 @@ Source Teams ──gRPC──► EF ──► Staging S3 ──SNS/SQS──► 
 | 7-8 | GEF bidirectional reverse path | Clean data flows back through GEF to S3 |
 | 9-10 | Production SQS integration + batch processing | Handles real data volumes |
 | 11-12 | Dashboard + Proto CI + Slack alerting | Sustainable schema governance |
+
+
+PPT: https://docs.google.com/presentation/d/1QriO2UL4p-DVVQ58laJfdgY-WAg_FvgG-tuVSCLNazI/edit?slide=id.p2#slide=id.p2

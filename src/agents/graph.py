@@ -12,7 +12,7 @@ from src.agents.schema_agent import schema_agent
 from src.agents.state import Recommendation, ReviewState
 from src.proto_parser.extractor import extract_all_fields
 from src.proto_parser.parser import parse_proto_file
-from src.rag.store import SchemaStore
+from src.vectorstore.store import SchemaStore
 from src.registry.models import CanonicalRegistry
 
 logger = logging.getLogger(__name__)
@@ -36,6 +36,7 @@ def build_review_graph(
     store: SchemaStore,
     registry: CanonicalRegistry,
     use_llm_recommendations: bool = False,
+    model: str | None = None,
 ) -> StateGraph:
     """Build the LangGraph review pipeline.
 
@@ -67,7 +68,7 @@ def build_review_graph(
     def recommendation_node(state: ReviewState) -> dict:
         if use_llm_recommendations:
             from src.agents.recommendation_agent import recommendation_agent
-            return recommendation_agent(state)
+            return recommendation_agent(state, model=model)
         return recommendation_agent_simple(state)
 
     # Add nodes
@@ -105,6 +106,7 @@ def run_review(
     registry: CanonicalRegistry,
     proto_path: Path,
     use_llm_recommendations: bool = False,
+    model: str | None = None,
 ) -> ReviewResult:
     """Run the full review pipeline on a proto file.
 
@@ -119,7 +121,7 @@ def run_review(
     """
     proto_file = parse_proto_file(proto_path)
 
-    graph = build_review_graph(store, registry, use_llm_recommendations)
+    graph = build_review_graph(store, registry, use_llm_recommendations, model=model)
     compiled = graph.compile()
 
     initial_state: ReviewState = {
